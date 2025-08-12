@@ -170,7 +170,7 @@ For PackyCode API integration, add to `~/.config/claude/settings.json`:
 - **Memory usage**: < 10MB (vs ~25MB for Node.js tools)
 - **Binary size**: ~2MB optimized release build
 
-## Requirements
+## Requirements  
 
 - Git (optional, for git integration)  
 - Terminal with Nerd Font support
