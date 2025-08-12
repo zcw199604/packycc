@@ -56,7 +56,6 @@ pub struct QuotaSegment {
     api_key: Option<String>,
     base_url: String,
     info_url: Option<String>,
-    cache_duration: Duration,
 }
 
 impl QuotaSegment {
@@ -67,7 +66,6 @@ impl QuotaSegment {
             api_key,
             base_url,
             info_url,
-            cache_duration: Duration::from_secs(300), // 5 minutes cache
         }
     }
 
@@ -114,50 +112,14 @@ impl QuotaSegment {
     }
     
     fn get_claude_config_dir() -> Option<PathBuf> {
-        // Try to find Claude Code config directory
-        // Priority: XDG_CONFIG_HOME, then ~/.config/claude
-        if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
-            return Some(PathBuf::from(xdg_config).join("claude"));
-        }
-        
-        dirs::home_dir().map(|home| home.join(".config").join("claude"))
+        // Claude Code config directory is ~/.claude
+        dirs::home_dir().map(|home| home.join(".claude"))
     }
 
-    fn cache_path() -> PathBuf {
-        let temp_dir = std::env::temp_dir();
-        temp_dir.join("ccline_quota_cache.json")
-    }
-
-    fn get_cached_quota(&self) -> Option<ApiQuota> {
-        let cache_path = Self::cache_path();
-        
-        if let Ok(content) = fs::read_to_string(&cache_path) {
-            if let Ok(quota) = serde_json::from_str::<ApiQuota>(&content) {
-                // Check if cache is still valid
-                if let Ok(elapsed) = quota.timestamp.elapsed() {
-                    if elapsed < self.cache_duration {
-                        return Some(quota);
-                    }
-                }
-            }
-        }
-        
-        None
-    }
-
-    fn save_to_cache(&self, quota: &ApiQuota) {
-        let cache_path = Self::cache_path();
-        if let Ok(json) = serde_json::to_string(quota) {
-            let _ = fs::write(cache_path, json);
-        }
-    }
+    // Cache methods removed - no longer needed
 
     fn fetch_quota(&self) -> Option<ApiQuota> {
-        // Check cache first
-        if let Some(cached) = self.get_cached_quota() {
-            return Some(cached);
-        }
-
+        // No cache - fetch fresh data every time
         // Fetch from API
         let api_key = self.api_key.as_ref()?;
         
@@ -189,8 +151,7 @@ impl QuotaSegment {
                     timestamp: SystemTime::now(),
                 };
                 
-                // Save to cache
-                self.save_to_cache(&quota);
+                // No cache anymore
                 
                 return Some(quota);
             }
@@ -231,8 +192,7 @@ impl QuotaSegment {
                 timestamp: SystemTime::now(),
             };
             
-            // Save to cache
-            self.save_to_cache(&quota);
+            // No cache anymore
             
             Some(quota)
         } else {
