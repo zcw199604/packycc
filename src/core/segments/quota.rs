@@ -71,7 +71,7 @@ impl QuotaSegment {
 
     fn load_api_config() -> (Option<String>, String, Option<String>) {
         // Try multiple sources for API configuration
-        
+
         // 1. Claude Code settings.json
         if let Some(config_dir) = Self::get_claude_config_dir() {
             let settings_path = config_dir.join("settings.json");
@@ -80,7 +80,9 @@ impl QuotaSegment {
                     let info_url = settings.info_url.clone();
                     if let Some(env) = settings.env {
                         let api_key = env.auth_token.or(env.api_key);
-                        let base_url = env.base_url.unwrap_or_else(|| "https://api.anthropic.com".to_string());
+                        let base_url = env
+                            .base_url
+                            .unwrap_or_else(|| "https://api.anthropic.com".to_string());
                         if api_key.is_some() {
                             return (api_key, base_url, info_url);
                         }
@@ -88,16 +90,17 @@ impl QuotaSegment {
                 }
             }
         }
-        
+
         // 2. Environment variable
-        let api_key = std::env::var("ANTHROPIC_API_KEY").ok()
+        let api_key = std::env::var("ANTHROPIC_API_KEY")
+            .ok()
             .or_else(|| std::env::var("ANTHROPIC_AUTH_TOKEN").ok());
-        
+
         let base_url = std::env::var("ANTHROPIC_BASE_URL")
             .unwrap_or_else(|_| "https://api.anthropic.com".to_string());
-        
+
         let info_url = std::env::var("INFO_URL").ok();
-        
+
         // 3. Claude Code api_key file
         if api_key.is_none() {
             if let Some(home) = dirs::home_dir() {
@@ -107,10 +110,10 @@ impl QuotaSegment {
                 }
             }
         }
-        
+
         (api_key, base_url, info_url)
     }
-    
+
     fn get_claude_config_dir() -> Option<PathBuf> {
         // Claude Code config directory is ~/.claude
         dirs::home_dir().map(|home| home.join(".claude"))
@@ -122,7 +125,7 @@ impl QuotaSegment {
         // No cache - fetch fresh data every time
         // Fetch from API
         let api_key = self.api_key.as_ref()?;
-        
+
         // If we have a custom info_url, use that instead
         if let Some(info_url) = &self.info_url {
             let client = reqwest::blocking::Client::new();
@@ -134,29 +137,30 @@ impl QuotaSegment {
                 .timeout(Duration::from_secs(5))
                 .send()
                 .ok()?;
-            
+
             if response.status().is_success() {
                 let user_info: CustomApiUserInfo = response.json().ok()?;
-                
+
                 // Parse the string values
                 let daily_budget = user_info.daily_budget_usd.parse::<f64>().unwrap_or(0.0);
-                let daily_spent = user_info.daily_spent_usd
+                let daily_spent = user_info
+                    .daily_spent_usd
                     .and_then(|s| s.parse::<f64>().ok())
                     .unwrap_or(0.0);
-                
+
                 let quota = ApiQuota {
                     remaining: daily_budget - daily_spent,
                     total: daily_budget,
                     used: daily_spent,
                     timestamp: SystemTime::now(),
                 };
-                
+
                 // No cache anymore
-                
+
                 return Some(quota);
             }
         }
-        
+
         // Fallback to standard Anthropic API
         let url = if self.base_url.contains("api.anthropic.com") {
             format!("{}/v1/dashboard/usage", self.base_url)
@@ -164,36 +168,36 @@ impl QuotaSegment {
             // For proxy/custom endpoints, try common patterns
             format!("{}/v1/dashboard/usage", self.base_url)
         };
-        
+
         let client = reqwest::blocking::Client::new();
-        let mut request = client
-            .get(&url)
-            .timeout(Duration::from_secs(5));
-        
+        let mut request = client.get(&url).timeout(Duration::from_secs(5));
+
         // Handle different auth header formats based on the endpoint
         if self.base_url.contains("api.anthropic.com") {
-            request = request.header("x-api-key", api_key)
+            request = request
+                .header("x-api-key", api_key)
                 .header("anthropic-version", "2023-06-01");
         } else {
             // For custom endpoints, try both header formats
-            request = request.header("Authorization", format!("Bearer {}", api_key))
+            request = request
+                .header("Authorization", format!("Bearer {}", api_key))
                 .header("x-api-key", api_key);
         }
-        
+
         let response = request.send().ok()?;
 
         if response.status().is_success() {
             let usage: AnthropicUsageResponse = response.json().ok()?;
-            
+
             let quota = ApiQuota {
                 remaining: usage.remaining,
                 total: usage.limit,
                 used: usage.limit - usage.remaining,
                 timestamp: SystemTime::now(),
             };
-            
+
             // No cache anymore
-            
+
             Some(quota)
         } else {
             None

@@ -7,7 +7,7 @@ pub const DEFAULT_CONFIG: Config = Config {
         git: true,
         model: true,
         usage: true,
-        quota: true,  // Enabled by default
+        quota: true, // Enabled by default
     },
 };
 
@@ -20,7 +20,7 @@ impl Default for Config {
                 git: true,
                 model: true,
                 usage: true,
-                quota: true,  // Enabled by default
+                quota: true, // Enabled by default
             },
         }
     }

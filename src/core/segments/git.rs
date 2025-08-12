@@ -38,8 +38,10 @@ impl GitSegment {
 
     fn get_git_info(&self, working_dir: &str) -> Option<GitInfo> {
         let sanitized_dir = self.sanitize_path(working_dir);
-        
-        let branch = self.get_branch(&sanitized_dir).unwrap_or_else(|| "detached".to_string());
+
+        let branch = self
+            .get_branch(&sanitized_dir)
+            .unwrap_or_else(|| "detached".to_string());
         let status = self.get_status(&sanitized_dir);
         let (ahead, behind) = self.get_ahead_behind(&sanitized_dir);
         let sha = if self.show_sha {
@@ -60,7 +62,26 @@ impl GitSegment {
     fn sanitize_path(&self, path: &str) -> String {
         // Remove dangerous characters to prevent command injection
         path.chars()
-            .filter(|c| !matches!(c, ';' | '&' | '|' | '`' | '$' | '(' | ')' | '{' | '}' | '[' | ']' | '<' | '>' | '\'' | '"' | '\\'))
+            .filter(|c| {
+                !matches!(
+                    c,
+                    ';' | '&'
+                        | '|'
+                        | '`'
+                        | '$'
+                        | '('
+                        | ')'
+                        | '{'
+                        | '}'
+                        | '['
+                        | ']'
+                        | '<'
+                        | '>'
+                        | '\''
+                        | '"'
+                        | '\\'
+                )
+            })
             .collect()
     }
 
@@ -92,13 +113,16 @@ impl GitSegment {
         match output {
             Ok(output) if output.status.success() => {
                 let status_text = String::from_utf8(output.stdout).unwrap_or_default();
-                
+
                 if status_text.trim().is_empty() {
                     return GitStatus::Clean;
                 }
 
                 // Check for merge conflict markers
-                if status_text.contains("UU") || status_text.contains("AA") || status_text.contains("DD") {
+                if status_text.contains("UU")
+                    || status_text.contains("AA")
+                    || status_text.contains("DD")
+                {
                     GitStatus::Conflicts
                 } else {
                     GitStatus::Dirty
@@ -121,12 +145,10 @@ impl GitSegment {
             .output();
 
         match output {
-            Ok(output) if output.status.success() => {
-                String::from_utf8(output.stdout)
-                    .ok()
-                    .and_then(|s| s.trim().parse().ok())
-                    .unwrap_or(0)
-            }
+            Ok(output) if output.status.success() => String::from_utf8(output.stdout)
+                .ok()
+                .and_then(|s| s.trim().parse().ok())
+                .unwrap_or(0),
             _ => 0,
         }
     }

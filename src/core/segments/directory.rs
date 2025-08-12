@@ -17,11 +17,11 @@ impl Segment for DirectorySegment {
         if !self.enabled {
             return String::new();
         }
-        
+
         let dir_name = get_current_dir_name(&input.workspace.current_dir);
         format!("○ {}", dir_name)
     }
-    
+
     fn enabled(&self) -> bool {
         self.enabled
     }

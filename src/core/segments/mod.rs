@@ -1,8 +1,8 @@
 pub mod directory;
 pub mod git;
 pub mod model;
-pub mod usage;
 pub mod quota;
+pub mod usage;
 
 use crate::config::InputData;
 
@@ -15,5 +15,5 @@ pub trait Segment {
 pub use directory::DirectorySegment;
 pub use git::GitSegment;
 pub use model::ModelSegment;
-pub use usage::UsageSegment;
 pub use quota::QuotaSegment;
+pub use usage::UsageSegment;
