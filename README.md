@@ -2,6 +2,8 @@
 
 A high-performance Claude Code statusline tool written in Rust with Git integration, real-time usage tracking, and API quota monitoring.
 
+> Fork of [CCometixLine](https://github.com/Haleclipse/CCometixLine) with added PackyCode API integration and real-time quota monitoring.
+
 ![Language:Rust](https://img.shields.io/static/v1?label=Language&message=Rust&color=orange&style=flat-square)
 ![License:MIT](https://img.shields.io/static/v1?label=License&message=MIT&color=blue&style=flat-square)
 
@@ -200,6 +202,11 @@ cargo build --release
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## Credits
+
+- Original project: [CCometixLine](https://github.com/Haleclipse/CCometixLine) by Haleclipse
+- PackyCode API integration and enhancements by [petiky](https://github.com/petiky)
 
 ## License
 
