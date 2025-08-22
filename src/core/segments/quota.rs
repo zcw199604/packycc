@@ -12,6 +12,7 @@ struct ApiQuota {
     used: f64,
     timestamp: SystemTime,
     opus_enabled: Option<bool>,
+    monthly_spent: Option<f64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -149,6 +150,10 @@ impl QuotaSegment {
                     .daily_spent_usd
                     .and_then(|s| s.parse::<f64>().ok())
                     .unwrap_or(0.0);
+                let monthly_spent = user_info
+                    .monthly_spent_usd
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(0.0);
 
                 let quota = ApiQuota {
                     remaining: daily_budget - daily_spent,
@@ -156,6 +161,7 @@ impl QuotaSegment {
                     used: daily_spent,
                     timestamp: SystemTime::now(),
                     opus_enabled: Some(user_info.opus_enabled),
+                    monthly_spent: Some(monthly_spent),
                 };
 
                 // No cache anymore
@@ -198,6 +204,7 @@ impl QuotaSegment {
                 used: usage.limit - usage.remaining,
                 timestamp: SystemTime::now(),
                 opus_enabled: None,
+                monthly_spent: None,
             };
 
             // No cache anymore
@@ -211,6 +218,11 @@ impl QuotaSegment {
     fn format_quota(&self, quota: &ApiQuota) -> String {
         // 基础的日消费显示
         let mut result = format!("Today: ${:.2}", quota.used);
+        
+        // 添加月度消费显示（如果有的话）
+        if let Some(monthly_spent) = quota.monthly_spent {
+            result = format!("{} | Month: ${:.2}", result, monthly_spent);
+        }
         
         // 添加 Opus 可用状态显示
         if let Some(opus_enabled) = quota.opus_enabled {
