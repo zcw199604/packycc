@@ -61,6 +61,7 @@ impl GitSegment {
 
     fn sanitize_path(&self, path: &str) -> String {
         // Remove dangerous characters to prevent command injection
+        // On Windows, preserve backslashes as they are essential for path syntax
         path.chars()
             .filter(|c| {
                 !matches!(
@@ -79,13 +80,13 @@ impl GitSegment {
                         | '>'
                         | '\''
                         | '"'
-                        | '\\'
                 )
             })
             .collect()
     }
 
     fn get_branch(&self, working_dir: &str) -> Option<String> {
+        // 首先尝试 git branch --show-current
         let output = Command::new("git")
             .args(["branch", "--show-current"])
             .current_dir(working_dir)
@@ -94,14 +95,27 @@ impl GitSegment {
 
         if output.status.success() {
             let branch = String::from_utf8(output.stdout).ok()?.trim().to_string();
-            if branch.is_empty() {
-                None
-            } else {
-                Some(branch)
+            if !branch.is_empty() {
+                return Some(branch);
             }
-        } else {
-            None
         }
+
+        // 备用方法：使用 git symbolic-ref
+        let output = Command::new("git")
+            .args(["symbolic-ref", "--short", "HEAD"])
+            .current_dir(working_dir)
+            .output()
+            .ok()?;
+
+        if output.status.success() {
+            let branch = String::from_utf8(output.stdout).ok()?.trim().to_string();
+            if !branch.is_empty() {
+                return Some(branch);
+            }
+        }
+
+        // 如果都失败了，说明真的是在 detached HEAD 状态
+        None
     }
 
     fn get_status(&self, working_dir: &str) -> GitStatus {
