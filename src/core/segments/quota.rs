@@ -35,7 +35,7 @@ struct CustomApiUserInfo {
     monthly_budget_usd: String,
     #[allow(dead_code)]
     monthly_spent_usd: Option<String>,
-    opus_enabled: bool,
+    opus_enabled: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -160,7 +160,7 @@ impl QuotaSegment {
                     total: daily_budget,
                     used: daily_spent,
                     timestamp: SystemTime::now(),
-                    opus_enabled: Some(user_info.opus_enabled),
+                    opus_enabled: user_info.opus_enabled,
                     monthly_spent: Some(monthly_spent),
                 };
 
