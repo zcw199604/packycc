@@ -69,7 +69,7 @@ impl InfoShareSegment {
         dirs::home_dir().map(|home| home.join(".claude"))
     }
 
-    fn fetch_info(&self) -> Option<f64> {
+    fn fetch_team_total(&self) -> Option<f64> {
         let url = self.info_share_url.as_ref()?;
         let token = self.jwt_token.as_ref()?;
 
@@ -98,6 +98,12 @@ impl InfoShareSegment {
 
         None
     }
+    
+    fn format_team_total(&self, peers_total: f64, user_total: f64) -> String {
+        // 计算团队总消费并格式化
+        let team_total = peers_total + user_total;
+        format!("Team: ${:.2}", team_total)
+    }
 }
 
 impl Segment for InfoShareSegment {
@@ -107,33 +113,28 @@ impl Segment for InfoShareSegment {
         }
 
         // 获取团队成员（peers）的总消费
-        let peers_total = self.fetch_info().unwrap_or(0.0);
-        
-        // 获取当前用户的消费
-        // 创建一个 QuotaSegment 实例来获取用户消费
-        let quota_segment = super::QuotaSegment::new(true);
-        let user_quota_str = quota_segment.render(input);
-        
-        // 解析用户的 Today 值 (格式: "Today: $X.XX" 或 "Today: $X.XX | Month: $Y.YY | ...")
-        let user_today = if user_quota_str.starts_with("Today: $") {
-            let parts: Vec<&str> = user_quota_str.split('|').collect();
-            if let Some(today_part) = parts.first() {
-                today_part
+        if let Some(peers_total) = self.fetch_team_total() {
+            // 获取当前用户的消费
+            let quota_segment = super::QuotaSegment::new(true);
+            let user_quota_str = quota_segment.render(input);
+            
+            // 解析用户的 Today 值
+            let user_today = if user_quota_str.starts_with("Today: $") {
+                user_quota_str
                     .trim_start_matches("Today: $")
                     .trim()
                     .parse::<f64>()
                     .unwrap_or(0.0)
             } else {
                 0.0
-            }
+            };
+            
+            // 格式化团队总消费
+            self.format_team_total(peers_total, user_today)
         } else {
-            0.0
-        };
-        
-        // 计算团队总消费 = peers总消费 + 用户自己的消费
-        let total_team_spent = peers_total + user_today;
-        
-        format!("Team Total: ${:.2}", total_team_spent)
+            // 如果无法获取团队数据，显示 N/A
+            "◔ Team: N/A".to_string()
+        }
     }
 
     fn enabled(&self) -> bool {

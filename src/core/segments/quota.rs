@@ -216,25 +216,8 @@ impl QuotaSegment {
     }
 
     fn format_quota(&self, quota: &ApiQuota) -> String {
-        // 基础的日消费显示
-        let mut result = format!("Today: ${:.2}", quota.used);
-        
-        // 添加月度消费显示（如果有的话）
-        if let Some(monthly_spent) = quota.monthly_spent {
-            result = format!("{} | Month: ${:.2}", result, monthly_spent);
-        }
-        
-        // 添加 Opus 可用状态显示
-        if let Some(opus_enabled) = quota.opus_enabled {
-            let opus_status = if opus_enabled {
-                "✓ Opus"  // 绿色勾号表示可用
-            } else {
-                "✗ Opus"  // 红色叉号表示不可用
-            };
-            result = format!("{} | {}", result, opus_status);
-        }
-        
-        result
+        // 只显示日消费
+        format!("Today: ${:.2}", quota.used)
     }
 }
 
