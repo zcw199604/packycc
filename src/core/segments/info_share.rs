@@ -8,6 +8,13 @@ use std::time::Duration;
 #[derive(Debug, Deserialize)]
 struct ClaudeCodeSettings {
     info_share_url: Option<String>,
+    env: Option<ClaudeCodeEnv>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ClaudeCodeEnv {
+    #[serde(rename = "PARCKY_JWT_TOKEN")]
+    parcky_jwt_token: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -42,26 +49,31 @@ impl InfoShareSegment {
     }
 
     fn load_config() -> (Option<String>, Option<String>) {
-        // 1. 从 Claude Code settings.json 读取 info_share_url
-        let info_share_url = if let Some(config_dir) = Self::get_claude_config_dir() {
+        // 1. 从 Claude Code settings.json 读取配置
+        if let Some(config_dir) = Self::get_claude_config_dir() {
             let settings_path = config_dir.join("settings.json");
             if let Ok(content) = fs::read_to_string(&settings_path) {
                 if let Ok(settings) = serde_json::from_str::<ClaudeCodeSettings>(&content) {
-                    settings.info_share_url
-                } else {
-                    None
+                    let info_share_url = settings.info_share_url.clone();
+                    if let Some(env) = settings.env {
+                        let jwt_token = env.parcky_jwt_token;
+                        if info_share_url.is_some() && jwt_token.is_some() {
+                            return (info_share_url, jwt_token);
+                        }
+                    }
+                    // 如果 env 中没有 token，但有 info_share_url，继续尝试其他方式
+                    if info_share_url.is_some() {
+                        // 2. 从系统环境变量读取 PARCKY_JWT_TOKEN
+                        let jwt_token = std::env::var("PARCKY_JWT_TOKEN").ok();
+                        return (info_share_url, jwt_token);
+                    }
                 }
-            } else {
-                None
             }
-        } else {
-            None
-        };
+        }
 
-        // 2. 从环境变量读取 PARCKY_JWT_TOKEN
+        // 3. 如果 settings.json 不存在或解析失败，只从环境变量读取
         let jwt_token = std::env::var("PARCKY_JWT_TOKEN").ok();
-
-        (info_share_url, jwt_token)
+        (None, jwt_token)
     }
 
     fn get_claude_config_dir() -> Option<PathBuf> {
