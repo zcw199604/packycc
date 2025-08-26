@@ -81,7 +81,7 @@ impl InfoShareSegment {
         dirs::home_dir().map(|home| home.join(".claude"))
     }
 
-    fn fetch_team_total(&self) -> Option<f64> {
+    fn fetch_team_data(&self) -> Option<(f64, Vec<Peer>)> {
         let url = self.info_share_url.as_ref()?;
         let token = self.jwt_token.as_ref()?;
 
@@ -104,17 +104,41 @@ impl InfoShareSegment {
                     .map(|peer| peer.spent_usd_today.parse::<f64>().unwrap_or(0.0))
                     .sum();
                 
-                return Some(total_peers_spent);
+                return Some((total_peers_spent, info_data.peers));
             }
         }
 
         None
     }
     
-    fn format_team_total(&self, peers_total: f64, user_total: f64) -> String {
-        // 计算团队总消费并格式化
+    fn find_top_spender(&self, peers: &[Peer], user_spent: f64) -> (f64, String) {
+        // 找出 peers 中消费最高的成员
+        let top_peer = peers.iter()
+            .map(|peer| (peer.spent_usd_today.parse::<f64>().unwrap_or(0.0), &peer.display_name))
+            .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        
+        if let Some((top_peer_spent, top_peer_name)) = top_peer {
+            // 比较 top peer 和当前用户的消费
+            if user_spent > top_peer_spent {
+                (user_spent, "You".to_string())
+            } else {
+                (top_peer_spent, top_peer_name.clone())
+            }
+        } else {
+            // 如果没有 peers，当前用户就是最高的
+            (user_spent, "You".to_string())
+        }
+    }
+    
+    fn format_team_total(&self, peers_total: f64, user_total: f64, peers: &[Peer]) -> String {
+        // 计算团队总消费
         let team_total = peers_total + user_total;
-        format!("Team: ${:.2}", team_total)
+        
+        // 找出消费最高的成员
+        let (top_spent, top_name) = self.find_top_spender(peers, user_total);
+        
+        // 格式化显示：Team: $总额 (Top: 姓名 $消费)
+        format!("Team: ${:.2} (Top: {} ${:.2})", team_total, top_name, top_spent)
     }
 }
 
@@ -124,8 +148,8 @@ impl Segment for InfoShareSegment {
             return String::new();
         }
 
-        // 获取团队成员（peers）的总消费
-        if let Some(peers_total) = self.fetch_team_total() {
+        // 获取团队数据（peers总消费 + peers列表）
+        if let Some((peers_total, peers)) = self.fetch_team_data() {
             // 获取当前用户的消费
             let quota_segment = super::QuotaSegment::new(true);
             let user_quota_str = quota_segment.render(input);
@@ -141,8 +165,8 @@ impl Segment for InfoShareSegment {
                 0.0
             };
             
-            // 格式化团队总消费
-            self.format_team_total(peers_total, user_today)
+            // 格式化团队总消费（包含最高消费者信息）
+            self.format_team_total(peers_total, user_today, &peers)
         } else {
             // 如果无法获取团队数据，显示 N/A
             "◔ Team: N/A".to_string()
