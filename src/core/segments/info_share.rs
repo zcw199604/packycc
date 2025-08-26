@@ -91,7 +91,7 @@ impl InfoShareSegment {
             .header("Authorization", format!("Bearer {}", token))
             .header("accept", "*/*")
             .header("content-type", "application/json")
-            .timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(10))
             .send()
             .ok()?;
 

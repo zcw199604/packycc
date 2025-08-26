@@ -137,7 +137,7 @@ impl QuotaSegment {
                 .header("Authorization", format!("Bearer {}", api_key))
                 .header("accept", "*/*")
                 .header("content-type", "application/json")
-                .timeout(Duration::from_secs(5))
+                .timeout(Duration::from_secs(10))
                 .send()
                 .ok()?;
 
@@ -179,7 +179,7 @@ impl QuotaSegment {
         };
 
         let client = reqwest::blocking::Client::new();
-        let mut request = client.get(&url).timeout(Duration::from_secs(5));
+        let mut request = client.get(&url).timeout(Duration::from_secs(10));
 
         // Handle different auth header formats based on the endpoint
         if self.base_url.contains("api.anthropic.com") {
