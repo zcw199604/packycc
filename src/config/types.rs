@@ -10,6 +10,7 @@ pub struct Config {
 pub struct SegmentsConfig {
     pub directory: bool,
     pub git: bool,
+    pub info_share: bool,
     pub model: bool,
     pub usage: bool,
     pub quota: bool,

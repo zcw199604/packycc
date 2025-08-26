@@ -5,6 +5,7 @@ pub const DEFAULT_CONFIG: Config = Config {
     segments: SegmentsConfig {
         directory: true,
         git: true,
+        info_share: false, // Disabled by default, requires configuration
         model: true,
         usage: true,
         quota: true, // Enabled by default
@@ -18,6 +19,7 @@ impl Default for Config {
             segments: SegmentsConfig {
                 directory: true,
                 git: true,
+                info_share: false, // Disabled by default, requires configuration
                 model: true,
                 usage: true,
                 quota: true, // Enabled by default

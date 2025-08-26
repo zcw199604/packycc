@@ -1,6 +1,6 @@
 use crate::config::{Config, InputData};
 use crate::core::segments::{
-    DirectorySegment, GitSegment, ModelSegment, QuotaSegment, Segment, UsageSegment,
+    DirectorySegment, GitSegment, InfoShareSegment, ModelSegment, QuotaSegment, Segment, UsageSegment,
 };
 
 pub struct StatusLineGenerator {
@@ -49,6 +49,14 @@ impl StatusLineGenerator {
             let content = quota_segment.render(input);
             if !content.is_empty() {
                 segments.push(format!("\x1b[1;93m{}\x1b[0m", content));
+            }
+        }
+
+        if self.config.segments.info_share {
+            let info_share_segment = InfoShareSegment::new(true);
+            let content = info_share_segment.render(input);
+            if !content.is_empty() {
+                segments.push(format!("\x1b[1;96m{}\x1b[0m", content)); // 青色显示
             }
         }
 
