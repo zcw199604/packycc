@@ -30,11 +30,14 @@ impl Segment for CostSegment {
             parts.push(format!("${:.4}", usd));
         }
 
-        // 代码行数变更
+        // 代码行数变更（绿色+数 / 红色-数）
         let lines_added = cost.total_lines_added.unwrap_or(0);
         let lines_removed = cost.total_lines_removed.unwrap_or(0);
         if lines_added > 0 || lines_removed > 0 {
-            parts.push(format!("+{}/-{}", lines_added, lines_removed));
+            parts.push(format!(
+                "\x1b[32m+{}\x1b[0m/\x1b[31m-{}\x1b[0m",
+                lines_added, lines_removed
+            ));
         }
 
         parts.join(" ")
