@@ -1,5 +1,5 @@
 use crate::config::{Config, InputData};
-use crate::core::segments::{DirectorySegment, GitSegment, ModelSegment, Segment, UsageSegment};
+use crate::core::segments::{CostSegment, DirectorySegment, GitSegment, ModelSegment, Segment, UsageSegment};
 
 pub struct StatusLineGenerator {
     config: Config,
@@ -39,8 +39,18 @@ impl StatusLineGenerator {
         if self.config.segments.usage {
             let usage_segment = UsageSegment::new(true);
             let content = usage_segment.render(input);
-            // 颜色已在 UsageSegment 内部设置
-            segments.push(content);
+            if !content.is_empty() {
+                // 颜色已在 UsageSegment 内部设置
+                segments.push(content);
+            }
+        }
+
+        if self.config.segments.cost {
+            let cost_segment = CostSegment::new(true);
+            let content = cost_segment.render(input);
+            if !content.is_empty() {
+                segments.push(format!("\x1b[1;33m💰{}\x1b[0m", content));
+            }
         }
 
         // Join segments with white separator

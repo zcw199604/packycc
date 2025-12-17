@@ -1,18 +1,7 @@
 use super::Segment;
-use crate::config::{InputData, TranscriptEntry};
-use std::fs;
-use std::io::{BufRead, BufReader};
-use std::path::Path;
+use crate::config::InputData;
 
-/// 根据模型名称获取上下文上限
-fn get_context_limit(model_name: &str) -> u32 {
-    if model_name.contains("1M") {
-        1_000_000
-    } else {
-        200_000
-    }
-}
-
+/// 上下文使用率 segment，显示当前上下文使用情况
 pub struct UsageSegment {
     enabled: bool,
 }
@@ -29,12 +18,26 @@ impl Segment for UsageSegment {
             return String::new();
         }
 
-        let context_used_token = parse_transcript_usage(&input.transcript_path);
-        let context_limit = get_context_limit(&input.model.display_name);
-        let context_used_rate = (context_used_token as f64 / context_limit as f64) * 100.0;
+        // 直接从 context_window 获取数据
+        let context_window = match &input.context_window {
+            Some(cw) => cw,
+            None => return String::new(),
+        };
+
+        let context_limit = context_window.context_window_size.unwrap_or(200_000);
+        let context_used = match &context_window.current_usage {
+            Some(usage) => {
+                usage.input_tokens
+                    + usage.cache_creation_input_tokens
+                    + usage.cache_read_input_tokens
+            }
+            None => return String::new(),
+        };
+
+        let context_used_rate = (context_used as f64 / context_limit as f64) * 100.0;
 
         // 格式化 token 显示（当前/总量）
-        let current_display = format_token_count(context_used_token);
+        let current_display = format_token_count(context_used);
         let limit_display = format_token_count(context_limit);
 
         // 生成进度条（灰色底 + 浅绿色进度）
@@ -70,41 +73,4 @@ fn format_token_count(tokens: u32) -> String {
     } else {
         tokens.to_string()
     }
-}
-
-/// 解析 transcript 文件获取最后一条记录的上下文 token
-fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> u32 {
-    let file = match fs::File::open(&transcript_path) {
-        Ok(file) => file,
-        Err(_) => return 0,
-    };
-
-    let reader = BufReader::new(file);
-    let lines: Vec<String> = reader
-        .lines()
-        .collect::<Result<Vec<_>, _>>()
-        .unwrap_or_default();
-
-    let mut last_context_tokens: u32 = 0;
-
-    for line in lines.iter() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-
-        if let Ok(entry) = serde_json::from_str::<TranscriptEntry>(line) {
-            if entry.r#type.as_deref() == Some("assistant") {
-                if let Some(message) = &entry.message {
-                    if let Some(usage) = &message.usage {
-                        last_context_tokens = usage.input_tokens
-                            + usage.cache_read_input_tokens
-                            + usage.cache_creation_input_tokens;
-                    }
-                }
-            }
-        }
-    }
-
-    last_context_tokens
 }
