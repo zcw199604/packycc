@@ -6,12 +6,13 @@ use std::path::Path;
 
 /// Token 使用信息
 struct TokenUsage {
-    // 用于费用计算（累加值）
-    total_input_tokens: u32,
-    total_cache_read_tokens: u32,
-    total_cache_write_tokens: u32,
+    // 用于费用计算 - input 相关使用最后一条记录
+    last_input_tokens: u32,
+    last_cache_read_tokens: u32,
+    last_cache_write_tokens: u32,
+    // 用于费用计算 - output 累加
     total_output_tokens: u32,
-    // 用于上下文使用率（最后一条记录）
+    // 用于上下文使用率（最后一条记录的总输入）
     last_context_tokens: u32,
 }
 
@@ -70,11 +71,12 @@ fn get_model_pricing(model_name: &str, total_input_tokens: u32) -> ModelPricing 
 }
 
 /// 计算总费用
+/// input 相关用最后一条记录，output 累加
 fn calculate_cost(usage: &TokenUsage, pricing: &ModelPricing) -> f64 {
     let million = 1_000_000.0;
-    (usage.total_input_tokens as f64 / million) * pricing.input
-        + (usage.total_cache_read_tokens as f64 / million) * pricing.cache_read
-        + (usage.total_cache_write_tokens as f64 / million) * pricing.cache_write
+    (usage.last_input_tokens as f64 / million) * pricing.input
+        + (usage.last_cache_read_tokens as f64 / million) * pricing.cache_read
+        + (usage.last_cache_write_tokens as f64 / million) * pricing.cache_write
         + (usage.total_output_tokens as f64 / million) * pricing.output
 }
 
@@ -104,12 +106,12 @@ impl Segment for UsageSegment {
         let current_display = format_token_count(context_used_token);
         let limit_display = format_token_count(context_limit);
 
-        // 生成进度条 🟩🟩⬜⬜⬜⬜⬜⬜⬜⬜
+        // 生成进度条 ▓▓░░░░░░░░（灰色渐变方块）
         let bar_width = 10;
         let filled = ((context_used_rate / 100.0) * bar_width as f64).round() as usize;
         let filled = filled.min(bar_width); // 确保不超过总宽度
         let empty = bar_width - filled;
-        let progress_bar = format!("{}{}", "🟩".repeat(filled), "⬜".repeat(empty));
+        let progress_bar = format!("{}{}", "▓".repeat(filled), "░".repeat(empty));
 
         // 计算费用（使用累加的 token）
         let pricing = get_model_pricing(&input.model.display_name, context_used_token);
@@ -138,16 +140,16 @@ fn format_token_count(tokens: u32) -> String {
 }
 
 /// 解析 transcript 文件获取 token 使用信息
-/// - 累加所有 token 用于费用计算
-/// - 最后一条记录的上下文 token 用于使用率计算
+/// - input 相关：使用最后一条记录（当前上下文的费用）
+/// - output：累加所有记录（每次输出都是新费用）
 fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> TokenUsage {
     let file = match fs::File::open(&transcript_path) {
         Ok(file) => file,
         Err(_) => {
             return TokenUsage {
-                total_input_tokens: 0,
-                total_cache_read_tokens: 0,
-                total_cache_write_tokens: 0,
+                last_input_tokens: 0,
+                last_cache_read_tokens: 0,
+                last_cache_write_tokens: 0,
                 total_output_tokens: 0,
                 last_context_tokens: 0,
             }
@@ -160,10 +162,12 @@ fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> TokenUsage {
         .collect::<Result<Vec<_>, _>>()
         .unwrap_or_default();
 
-    // 累加所有 token（用于费用计算）
-    let mut total_input_tokens: u32 = 0;
-    let mut total_cache_read_tokens: u32 = 0;
-    let mut total_cache_write_tokens: u32 = 0;
+    // 最后一条记录的 input 相关 token
+    let mut last_input_tokens: u32 = 0;
+    let mut last_cache_read_tokens: u32 = 0;
+    let mut last_cache_write_tokens: u32 = 0;
+
+    // 累加的 output token
     let mut total_output_tokens: u32 = 0;
 
     // 最后一条记录的上下文 token（用于使用率计算）
@@ -179,10 +183,12 @@ fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> TokenUsage {
             if entry.r#type.as_deref() == Some("assistant") {
                 if let Some(message) = &entry.message {
                     if let Some(usage) = &message.usage {
-                        // 累加用于费用计算
-                        total_input_tokens += usage.input_tokens;
-                        total_cache_read_tokens += usage.cache_read_input_tokens;
-                        total_cache_write_tokens += usage.cache_creation_input_tokens;
+                        // 更新最后一条的 input 相关 token
+                        last_input_tokens = usage.input_tokens;
+                        last_cache_read_tokens = usage.cache_read_input_tokens;
+                        last_cache_write_tokens = usage.cache_creation_input_tokens;
+
+                        // 累加 output token
                         total_output_tokens += usage.output_tokens;
 
                         // 更新最后一条的上下文 token
@@ -196,9 +202,9 @@ fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> TokenUsage {
     }
 
     TokenUsage {
-        total_input_tokens,
-        total_cache_read_tokens,
-        total_cache_write_tokens,
+        last_input_tokens,
+        last_cache_read_tokens,
+        last_cache_write_tokens,
         total_output_tokens,
         last_context_tokens,
     }
