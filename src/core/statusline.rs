@@ -39,7 +39,8 @@ impl StatusLineGenerator {
         if self.config.segments.usage {
             let usage_segment = UsageSegment::new(true);
             let content = usage_segment.render(input);
-            segments.push(format!("\x1b[1;35m{}\x1b[0m", content));
+            // 颜色已在 UsageSegment 内部设置
+            segments.push(content);
         }
 
         // Join segments with white separator
