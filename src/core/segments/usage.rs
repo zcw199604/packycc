@@ -40,14 +40,14 @@ impl Segment for UsageSegment {
         let current_display = format_token_count(context_used);
         let limit_display = format_token_count(context_limit);
 
-        // 生成进度条（深灰色进度 + 浅灰色底）
+        // 生成进度条（薰衣草色进度 + 深灰色底）
         let bar_width = 10;
         let filled = ((context_used_rate / 100.0) * bar_width as f64).round() as usize;
         let filled = filled.min(bar_width);
         let empty = bar_width - filled;
-        // 深灰色进度 \x1b[90m，浅灰色底 \x1b[37m
+        // 薰衣草色进度 \x1b[38;5;147m，深灰色底 \x1b[90m
         let progress_bar = format!(
-            "\x1b[90m{}\x1b[37m{}\x1b[0m",
+            "\x1b[38;5;147m{}\x1b[90m{}\x1b[0m",
             "▓".repeat(filled),
             "░".repeat(empty)
         );
