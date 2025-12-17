@@ -27,21 +27,31 @@ impl Segment for ModelSegment {
 
 impl ModelSegment {
     fn format_model_name(&self, display_name: &str) -> String {
-        match display_name {
+        // 首先处理 (1M context) -> 1M
+        let name = display_name.replace("(1M context)", "1M").trim().to_string();
+
+        match name.as_str() {
             // Opus 系列
-            name if name.contains("opus-4-5") || name.contains("opus-4.5") => "Opus 4.5".to_string(),
-            name if name.contains("claude-4-1-opus") => "Opus 4.1".to_string(),
-            name if name.contains("claude-4-opus") || name.contains("opus-4") => "Opus 4".to_string(),
+            n if n.contains("opus-4-5") || n.contains("opus-4.5") => "Opus 4.5".to_string(),
+            n if n.contains("claude-4-1-opus") => "Opus 4.1".to_string(),
+            n if n.contains("claude-4-opus") || n.contains("opus-4") => "Opus 4".to_string(),
             // Sonnet 系列
-            name if name.contains("sonnet-4-5") || name.contains("sonnet-4.5") => "Sonnet 4.5".to_string(),
-            name if name.contains("claude-4-sonnet") || name.contains("sonnet-4") => "Sonnet 4".to_string(),
-            name if name.contains("claude-3-7-sonnet") => "Sonnet 3.7".to_string(),
-            name if name.contains("claude-3-5-sonnet") => "Sonnet 3.5".to_string(),
-            name if name.contains("claude-3-sonnet") => "Sonnet 3".to_string(),
+            n if n.contains("sonnet-4-5") || n.contains("sonnet-4.5") => {
+                // 如果包含 1M，保留
+                if name.contains("1M") {
+                    "Sonnet 4.5 1M".to_string()
+                } else {
+                    "Sonnet 4.5".to_string()
+                }
+            }
+            n if n.contains("claude-4-sonnet") || n.contains("sonnet-4") => "Sonnet 4".to_string(),
+            n if n.contains("claude-3-7-sonnet") => "Sonnet 3.7".to_string(),
+            n if n.contains("claude-3-5-sonnet") => "Sonnet 3.5".to_string(),
+            n if n.contains("claude-3-sonnet") => "Sonnet 3".to_string(),
             // Haiku 系列
-            name if name.contains("haiku") => "Haiku".to_string(),
+            n if n.contains("haiku") => "Haiku".to_string(),
             // 默认
-            _ => display_name.to_string(),
+            _ => name,
         }
     }
 }
