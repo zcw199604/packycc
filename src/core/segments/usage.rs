@@ -104,12 +104,12 @@ impl Segment for UsageSegment {
         let current_display = format_token_count(context_used_token);
         let limit_display = format_token_count(context_limit);
 
-        // 生成进度条 ◎◉▣▣▣▣▣▣▣▣
+        // 生成进度条 🟩🟩⬜⬜⬜⬜⬜⬜⬜⬜
         let bar_width = 10;
         let filled = ((context_used_rate / 100.0) * bar_width as f64).round() as usize;
         let filled = filled.min(bar_width); // 确保不超过总宽度
         let empty = bar_width - filled;
-        let progress_bar = format!("◎{}{}", "◉".repeat(filled), "▣".repeat(empty));
+        let progress_bar = format!("{}{}", "🟩".repeat(filled), "⬜".repeat(empty));
 
         // 计算费用（使用累加的 token）
         let pricing = get_model_pricing(&input.model.display_name, context_used_token);
