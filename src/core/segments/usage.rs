@@ -133,6 +133,8 @@ impl Segment for UsageSegment {
 }
 
 /// 解析 transcript 文件获取 token 使用信息
+/// - input_tokens/cache_read_tokens: 使用最后一条记录（代表当前上下文大小）
+/// - output_tokens/cache_write_tokens: 累加所有记录（代表整个会话的输出费用）
 fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> TokenUsage {
     let file = match fs::File::open(&transcript_path) {
         Ok(file) => file,
@@ -152,7 +154,15 @@ fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> TokenUsage {
         .collect::<Result<Vec<_>, _>>()
         .unwrap_or_default();
 
-    for line in lines.iter().rev() {
+    // 累加所有输出相关的 token
+    let mut total_output_tokens: u32 = 0;
+    let mut total_cache_write_tokens: u32 = 0;
+
+    // 最后一条记录的上下文相关 token
+    let mut last_input_tokens: u32 = 0;
+    let mut last_cache_read_tokens: u32 = 0;
+
+    for line in lines.iter() {
         let line = line.trim();
         if line.is_empty() {
             continue;
@@ -162,12 +172,13 @@ fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> TokenUsage {
             if entry.r#type.as_deref() == Some("assistant") {
                 if let Some(message) = &entry.message {
                     if let Some(usage) = &message.usage {
-                        return TokenUsage {
-                            input_tokens: usage.input_tokens,
-                            cache_read_tokens: usage.cache_read_input_tokens,
-                            cache_write_tokens: usage.cache_creation_input_tokens,
-                            output_tokens: usage.output_tokens,
-                        };
+                        // 累加输出相关的 token
+                        total_output_tokens += usage.output_tokens;
+                        total_cache_write_tokens += usage.cache_creation_input_tokens;
+
+                        // 更新上下文相关的 token（最终保留最后一条的值）
+                        last_input_tokens = usage.input_tokens;
+                        last_cache_read_tokens = usage.cache_read_input_tokens;
                     }
                 }
             }
@@ -175,9 +186,9 @@ fn parse_transcript_usage<P: AsRef<Path>>(transcript_path: P) -> TokenUsage {
     }
 
     TokenUsage {
-        input_tokens: 0,
-        cache_read_tokens: 0,
-        cache_write_tokens: 0,
-        output_tokens: 0,
+        input_tokens: last_input_tokens,
+        cache_read_tokens: last_cache_read_tokens,
+        cache_write_tokens: total_cache_write_tokens,
+        output_tokens: total_output_tokens,
     }
 }
