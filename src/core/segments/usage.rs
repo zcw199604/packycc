@@ -54,7 +54,7 @@ impl Segment for UsageSegment {
 
         // 薰衣草色的百分比和上下文大小 \x1b[38;5;147m
         format!(
-            "{} \x1b[38;5;147m{:.1}% ({}/{})\x1b[0m",
+            "{} \x1b[38;5;147m{:.2}% ({}/{})\x1b[0m",
             progress_bar, context_used_rate, current_display, limit_display
         )
     }
@@ -67,9 +67,9 @@ impl Segment for UsageSegment {
 /// 格式化 token 数量显示
 fn format_token_count(tokens: u32) -> String {
     if tokens >= 1_000_000 {
-        format!("{:.1}M", tokens as f64 / 1_000_000.0)
+        format!("{:.2}M", tokens as f64 / 1_000_000.0)
     } else if tokens >= 1000 {
-        format!("{:.1}K", tokens as f64 / 1000.0)
+        format!("{:.2}K", tokens as f64 / 1000.0)
     } else {
         tokens.to_string()
     }

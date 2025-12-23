@@ -27,7 +27,7 @@ impl Segment for CostSegment {
 
         // 费用
         if let Some(usd) = cost.total_cost_usd {
-            parts.push(format!("${:.4}", usd));
+            parts.push(format!("${:.2}", usd));
         }
 
         // 代码行数变更（绿色+数 / 红色-数）
