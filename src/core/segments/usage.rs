@@ -24,7 +24,7 @@ impl Segment for UsageSegment {
             None => return String::new(),
         };
 
-        let context_limit = context_window.context_window_size.unwrap_or(200_000);
+        let context_limit = context_window.context_window_size.unwrap_or(1_000_000);
         let context_used = match &context_window.current_usage {
             Some(usage) => {
                 usage.input_tokens
