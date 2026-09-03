@@ -28,7 +28,10 @@ impl Segment for ModelSegment {
 impl ModelSegment {
     fn format_model_name(&self, display_name: &str) -> String {
         // 首先处理 (1M context) -> 1M
-        let name = display_name.replace("(1M context)", "1M").trim().to_string();
+        let name = display_name
+            .replace("(1M context)", "1M")
+            .trim()
+            .to_string();
 
         match name.as_str() {
             // Opus 系列

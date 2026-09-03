@@ -1,5 +1,7 @@
 use crate::config::{Config, InputData};
-use crate::core::segments::{CostSegment, DirectorySegment, GitSegment, ModelSegment, Segment, UsageSegment};
+use crate::core::segments::{
+    CostSegment, DirectorySegment, GitSegment, ModelSegment, Segment, UsageSegment,
+};
 
 pub struct StatusLineGenerator {
     config: Config,
