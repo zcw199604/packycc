@@ -144,7 +144,7 @@ Shows simplified Claude model names:
 - `claude-4-sonnet` → `Sonnet 4`
 - `claude-4-1-opus` → `Opus 4.1`
 
-The live reasoning effort follows the model name, for example `Sonnet 4.5 [high]`.
+The live reasoning effort follows the model name, for example `Sonnet 4.5 high`.
 It reads `effort.level` from Claude Code's status line input and is hidden when unavailable.
 
 ### Context Window Display

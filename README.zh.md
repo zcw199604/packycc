@@ -86,7 +86,7 @@ ccline --configure
 - `claude-3-5-sonnet` → `Sonnet 3.5`
 - `claude-4-sonnet` → `Sonnet 4`
 
-当前思考强度直接显示在模型名称后，例如 `Sonnet 4.5 [high]`。
+当前思考强度直接显示在模型名称后，例如 `Sonnet 4.5 high`。
 读取 Claude Code 状态栏输入的 `effort.level`；字段不可用时隐藏。
 
 ### 上下文窗口显示
