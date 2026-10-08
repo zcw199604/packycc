@@ -60,7 +60,7 @@ fn render_context(input: &InputData) -> String {
     let limit_display = format_token_count(context_limit);
 
     // 生成进度条（薰衣草色进度 + 深灰色底）
-    let bar_width = 10;
+    let bar_width = 5;
     let filled = ((context_used_rate / 100.0) * bar_width as f64).round() as usize;
     let filled = filled.min(bar_width);
     let empty = bar_width - filled;
