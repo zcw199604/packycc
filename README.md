@@ -144,9 +144,17 @@ Shows simplified Claude model names:
 - `claude-4-sonnet` → `Sonnet 4`
 - `claude-4-1-opus` → `Opus 4.1`
 
+The live reasoning effort follows the model name, for example `Sonnet 4.5 [high]`.
+It reads `effort.level` from Claude Code's status line input and is hidden when unavailable.
+
 ### Context Window Display
 
-Token usage percentage based on transcript analysis with context limit tracking.
+Token usage percentage and size read from `context_window.current_usage` in Claude Code's status line input.
+
+Cache hit rate follows the context display, for example `7.75% (15.50K/200.00K) · Cache 91.00%`.
+`Cache` uses the main conversation's cumulative, token-weighted `prompt_cache.hit_ratio` (Claude Code v2.1.251+; excludes subagents).
+When unavailable, `Cache(last)` shows the last API request's cache read tokens divided by all input tokens (uncached input + cache writes + cache reads).
+Unknown rates are hidden. The context token count is the latest request's input size, not cumulative session usage.
 
 ### API Quota Display
 

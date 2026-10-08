@@ -40,6 +40,16 @@ pub struct CurrentUsage {
     pub cache_read_input_tokens: u32,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct Effort {
+    pub level: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PromptCache {
+    pub hit_ratio: Option<f64>,
+}
+
 // Claude Code 传入的数据结构
 #[derive(Deserialize)]
 pub struct Model {
@@ -58,4 +68,6 @@ pub struct InputData {
     pub transcript_path: String,
     pub cost: Option<Cost>,
     pub context_window: Option<ContextWindow>,
+    pub effort: Option<Effort>,
+    pub prompt_cache: Option<PromptCache>,
 }

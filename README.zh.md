@@ -86,9 +86,17 @@ ccline --configure
 - `claude-3-5-sonnet` → `Sonnet 3.5`
 - `claude-4-sonnet` → `Sonnet 4`
 
+当前思考强度直接显示在模型名称后，例如 `Sonnet 4.5 [high]`。
+读取 Claude Code 状态栏输入的 `effort.level`；字段不可用时隐藏。
+
 ### 上下文窗口显示
 
-基于转录文件分析的令牌使用百分比，包含上下文限制跟踪。
+从 Claude Code 状态栏输入的 `context_window.current_usage` 读取上下文使用百分比和大小。
+
+缓存命中率显示在上下文后，例如 `7.75% (15.50K/200.00K) · Cache 91.00%`。
+`Cache` 使用主会话累计、按 token 加权的 `prompt_cache.hit_ratio`（Claude Code v2.1.251+，不含子代理）。
+该字段不可用时，`Cache(last)` 表示最近一次 API 请求的缓存读取 token / 全部输入 token（普通输入 + 缓存写入 + 缓存读取）。
+命中率未知时隐藏。上下文 token 数是最近一次请求的输入大小，不是整个会话的累计用量。
 
 ## 配置
 

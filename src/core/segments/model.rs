@@ -17,7 +17,11 @@ impl Segment for ModelSegment {
             return String::new();
         }
 
-        format!("● {}", self.format_model_name(&input.model.display_name))
+        let model_name = self.format_model_name(&input.model.display_name);
+        match &input.effort {
+            Some(effort) => format!("● {} [{}]", model_name, effort.level),
+            None => format!("● {}", model_name),
+        }
     }
 
     fn enabled(&self) -> bool {
