@@ -40,7 +40,7 @@ fn live_effort_follows_model_and_session_cache_follows_context() {
         "context_window": context(8500, 5000, 2000)
     }));
 
-    assert!(output.contains("Sonnet 4.5 high"), "{output}");
+    assert!(output.contains("Sonnet 4.5 High"), "{output}");
     assert!(!output.contains("[high]"), "{output}");
     assert!(output.contains("7.75% (15.50K/200.00K)"), "{output}");
     assert!(output.contains("Cache 91.00%"), "{output}");
@@ -53,7 +53,7 @@ fn older_clients_show_last_request_cache_fraction_with_all_input_categories() {
     let output = render(json!({ "context_window": context(8500, 5000, 2000) }));
 
     assert!(output.contains("Cache(last) 12.90%"), "{output}");
-    assert!(!output.contains("high"), "{output}");
+    assert!(!output.contains("High"), "{output}");
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn unknown_cache_and_effort_are_hidden_including_before_first_response() {
         let output = render(fields);
         assert!(output.contains("Sonnet 4.5"), "{output}");
         assert!(!output.contains("Cache"), "{output}");
-        assert!(!output.contains("high"), "{output}");
+        assert!(!output.contains("High"), "{output}");
     }
 }
 

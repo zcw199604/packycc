@@ -19,7 +19,14 @@ impl Segment for ModelSegment {
 
         let model_name = self.format_model_name(&input.model.display_name);
         match &input.effort {
-            Some(effort) => format!("● {} {}", model_name, effort.level),
+            Some(effort) => {
+                let mut chars = effort.level.chars();
+                let level = match chars.next() {
+                    Some(first) => format!("{}{}", first.to_uppercase(), chars.as_str()),
+                    None => String::new(),
+                };
+                format!("● {} {}", model_name, level)
+            }
             None => format!("● {}", model_name),
         }
     }
