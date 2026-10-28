@@ -160,7 +160,7 @@ Unknown rates are hidden. The context token count is the latest request's input 
 
 For claude.ai Pro/Max (OAuth) sessions, shows `rate_limits` from Claude Code's status line input, for example `5h 30% (14:12) · 7d 41% (2d4h)`.
 The 5-hour window shows its local reset time; the 7-day window shows the time remaining until reset.
-Colors: lavender below 70%, yellow from 70%, red from 90%. Hidden for API key sessions and before the first API response.
+Labels are dim gray; values are green below 70%, yellow from 70%, red from 90%. Hidden for API key sessions and before the first API response.
 To keep the countdown current while idle, set `"refreshInterval"` in your `statusLine` settings.
 
 ### Line Wrapping

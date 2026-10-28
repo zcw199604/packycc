@@ -20,6 +20,20 @@ fn render(fields: Value) -> String {
     StatusLineGenerator::new(config).generate_with_width(&input, None)
 }
 
+fn strip_ansi(s: &str) -> String {
+    let mut out = String::new();
+    let mut in_escape = false;
+    for c in s.chars() {
+        match c {
+            '\x1b' => in_escape = true,
+            'm' if in_escape => in_escape = false,
+            _ if !in_escape => out.push(c),
+            _ => {}
+        }
+    }
+    out
+}
+
 fn context(input_tokens: u32, cache_creation: u32, cache_read: u32) -> Value {
     json!({
         "context_window_size": 200_000,
@@ -121,9 +135,13 @@ fn subscription_quota_follows_context_with_local_reset_clock() {
         .with_timezone(&chrono::Local)
         .format("%H:%M")
         .to_string();
-    assert!(output.contains(&format!("5h 24% ({clock})")), "{output}");
-    assert!(output.contains("\x1b[31m7d 91% (3d0h)"), "{output}");
-    assert!(output.find("Cache(last)").unwrap() < output.find("5h 24%").unwrap());
+    let plain = strip_ansi(&output);
+    assert!(plain.contains(&format!("5h 24% ({clock})")), "{plain}");
+    assert!(
+        output.contains("\x1b[90m7d\x1b[0m \x1b[38;5;203m91% (3d0h)"),
+        "{output}"
+    );
+    assert!(plain.find("Cache(last)").unwrap() < plain.find("5h 24%").unwrap());
 }
 
 #[test]

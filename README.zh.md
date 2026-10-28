@@ -102,7 +102,7 @@ ccline --configure
 
 claude.ai Pro/Max（OAuth 登录）会话会显示 Claude Code 状态栏输入中的 `rate_limits`，例如 `5h 30% (14:12) · 7d 41% (2d4h)`。
 5 小时窗口显示本地重置时刻，7 天窗口显示距离重置的剩余时长。
-颜色：低于 70% 为薰衣草色，70% 起为黄色，90% 起为红色。API Key 会话或首次 API 响应之前不显示。
+颜色：标签为暗灰色；数值低于 70% 为绿色，70% 起为黄色，90% 起为红色。API Key 会话或首次 API 响应之前不显示。
 如需空闲时倒计时也保持更新，可在 `statusLine` 配置中设置 `"refreshInterval"`。
 
 ### 自动换行

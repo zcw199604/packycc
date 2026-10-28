@@ -41,7 +41,7 @@ where
             .and_then(|ts| now.timezone().timestamp_opt(ts, 0).single())
             .map(|t| format!(" ({})", t.format("%H:%M")))
             .unwrap_or_default();
-        parts.push(colorize(pct, &format!("5h {}%{}", pct, reset)));
+        parts.push(colorize("5h", pct, &format!("{}%{}", pct, reset)));
     }
 
     if let Some((pct, resets_at)) = window(&limits.seven_day) {
@@ -50,10 +50,10 @@ where
             .filter(|secs| *secs > 0)
             .map(|secs| format!(" ({})", format_remaining(secs)))
             .unwrap_or_default();
-        parts.push(colorize(pct, &format!("7d {}%{}", pct, reset)));
+        parts.push(colorize("7d", pct, &format!("{}%{}", pct, reset)));
     }
 
-    parts.join(" · ")
+    parts.join("\x1b[90m · \x1b[0m")
 }
 
 fn window(window: &Option<RateWindow>) -> Option<(i64, Option<i64>)> {
@@ -62,14 +62,17 @@ fn window(window: &Option<RateWindow>) -> Option<(i64, Option<i64>)> {
     Some((pct, window.resets_at))
 }
 
-/// 薰衣草色 <70%，黄色 70%~89%，红色 ≥90%
-fn colorize(pct: i64, text: &str) -> String {
+/// 标签暗灰；数值绿色 <70%，黄色 70%~89%，红色 ≥90%
+fn colorize(label: &str, pct: i64, value: &str) -> String {
     let color = match pct {
-        p if p >= 90 => "\x1b[31m",
-        p if p >= 70 => "\x1b[33m",
-        _ => "\x1b[38;5;147m",
+        p if p >= 90 => 203,
+        p if p >= 70 => 221,
+        _ => 114,
     };
-    format!("{}{}\x1b[0m", color, text)
+    format!(
+        "\x1b[90m{}\x1b[0m \x1b[38;5;{}m{}\x1b[0m",
+        label, color, value
+    )
 }
 
 fn format_remaining(secs: i64) -> String {
@@ -139,10 +142,11 @@ mod tests {
 
     #[test]
     fn color_switches_at_70_and_90_percent() {
-        assert!(colorize(69, "x").starts_with("\x1b[38;5;147m"));
-        assert!(colorize(70, "x").starts_with("\x1b[33m"));
-        assert!(colorize(89, "x").starts_with("\x1b[33m"));
-        assert!(colorize(90, "x").starts_with("\x1b[31m"));
+        let value_color = |pct| colorize("5h", pct, "x").replace("\x1b[90m5h\x1b[0m ", "");
+        assert_eq!(value_color(69), "\x1b[38;5;114mx\x1b[0m");
+        assert_eq!(value_color(70), "\x1b[38;5;221mx\x1b[0m");
+        assert_eq!(value_color(89), "\x1b[38;5;221mx\x1b[0m");
+        assert_eq!(value_color(90), "\x1b[38;5;203mx\x1b[0m");
     }
 
     #[test]
