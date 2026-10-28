@@ -156,6 +156,17 @@ Cache hit rate follows the context display, for example `7.75% (15.50K/200.00K) 
 When unavailable, `Cache(last)` shows the last API request's cache read tokens divided by all input tokens (uncached input + cache writes + cache reads).
 Unknown rates are hidden. The context token count is the latest request's input size, not cumulative session usage.
 
+### Subscription Quota Display
+
+For claude.ai Pro/Max (OAuth) sessions, shows `rate_limits` from Claude Code's status line input, for example `5h 30% (14:12) · 7d 41% (2d4h)`.
+The 5-hour window shows its local reset time; the 7-day window shows the time remaining until reset.
+Colors: lavender below 70%, yellow from 70%, red from 90%. Hidden for API key sessions and before the first API response.
+To keep the countdown current while idle, set `"refreshInterval"` in your `statusLine` settings.
+
+### Line Wrapping
+
+When the status line is wider than the terminal (`COLUMNS`, set by Claude Code), it wraps between segments instead of inside one.
+
 ### API Quota Display
 
 Shows daily API spending from PackyCode API when configured in `~/.config/claude/settings.json`.

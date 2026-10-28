@@ -2,6 +2,7 @@ pub mod cost;
 pub mod directory;
 pub mod git;
 pub mod model;
+pub mod quota;
 pub mod usage;
 
 use crate::config::InputData;
@@ -16,4 +17,5 @@ pub use cost::CostSegment;
 pub use directory::DirectorySegment;
 pub use git::GitSegment;
 pub use model::ModelSegment;
+pub use quota::QuotaSegment;
 pub use usage::UsageSegment;

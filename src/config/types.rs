@@ -12,6 +12,7 @@ pub struct SegmentsConfig {
     pub git: bool,
     pub model: bool,
     pub usage: bool,
+    pub quota: bool,
     pub cost: bool,
 }
 
@@ -50,6 +51,20 @@ pub struct PromptCache {
     pub hit_ratio: Option<f64>,
 }
 
+// 订阅账号（OAuth 登录）的限额窗口，API Key 登录时不存在
+#[derive(Debug, Deserialize, Default)]
+pub struct RateLimits {
+    pub five_hour: Option<RateWindow>,
+    pub seven_day: Option<RateWindow>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct RateWindow {
+    pub used_percentage: Option<f64>,
+    /// Unix 时间戳（秒）
+    pub resets_at: Option<i64>,
+}
+
 // Claude Code 传入的数据结构
 #[derive(Deserialize)]
 pub struct Model {
@@ -70,4 +85,5 @@ pub struct InputData {
     pub context_window: Option<ContextWindow>,
     pub effort: Option<Effort>,
     pub prompt_cache: Option<PromptCache>,
+    pub rate_limits: Option<RateLimits>,
 }
