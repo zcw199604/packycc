@@ -138,7 +138,7 @@ fn subscription_quota_follows_context_with_local_reset_clock() {
     let plain = strip_ansi(&output);
     assert!(plain.contains(&format!("5h 24% ({clock})")), "{plain}");
     assert!(
-        output.contains("\x1b[90m7d\x1b[0m \x1b[38;5;203m91% (3d0h)"),
+        output.contains("\x1b[1;38;5;252m7d\x1b[0m \x1b[38;5;203m91% (3d0h)"),
         "{output}"
     );
     assert!(plain.find("Cache(last)").unwrap() < plain.find("5h 24%").unwrap());

@@ -74,7 +74,7 @@ where
     .into_iter()
     .filter_map(|(spec, window)| render_window(spec, window.as_ref()?, &now))
     .collect::<Vec<_>>()
-    .join("\x1b[90m · \x1b[0m")
+    .join("\x1b[38;5;242m · \x1b[0m")
 }
 
 fn render_window<Tz: TimeZone>(
@@ -108,7 +108,7 @@ where
     };
     if let Some(budget) = budget_per_unit(spec, used, remaining) {
         out.push_str(&format!(
-            " \x1b[90m≈{}%/{}\x1b[0m",
+            " \x1b[38;5;246m≈{}%/{}\x1b[0m",
             budget, spec.budget_label
         ));
     }
@@ -146,7 +146,7 @@ fn exhausted_in(spec: &WindowSpec, used: f64, remaining: i64) -> Option<i64> {
     (secs < remaining).then_some(secs)
 }
 
-/// 标签暗灰；数值绿色 <70%，黄色 70%~89%，红色 ≥90%
+/// 标签加粗浅灰（深色终端下醒目）；数值绿色 <70%，黄色 70%~89%，红色 ≥90%
 fn colorize(label: &str, pct: i64, value: &str) -> String {
     let color = match pct {
         p if p >= 90 => 203,
@@ -154,7 +154,7 @@ fn colorize(label: &str, pct: i64, value: &str) -> String {
         _ => 114,
     };
     format!(
-        "\x1b[90m{}\x1b[0m \x1b[38;5;{}m{}\x1b[0m",
+        "\x1b[1;38;5;252m{}\x1b[0m \x1b[38;5;{}m{}\x1b[0m",
         label, color, value
     )
 }
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn color_switches_at_70_and_90_percent() {
-        let value_color = |pct| colorize("5h", pct, "x").replace("\x1b[90m5h\x1b[0m ", "");
+        let value_color = |pct| colorize("5h", pct, "x").replace("\x1b[1;38;5;252m5h\x1b[0m ", "");
         assert_eq!(value_color(69), "\x1b[38;5;114mx\x1b[0m");
         assert_eq!(value_color(70), "\x1b[38;5;221mx\x1b[0m");
         assert_eq!(value_color(89), "\x1b[38;5;221mx\x1b[0m");
